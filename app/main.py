@@ -3,7 +3,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 import os
 from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
-from google.appengine.ext import db
 
 from BeautifulSoup import BeautifulStoneSoup
 
@@ -14,12 +13,6 @@ import redirect
 
 import logging
 
-class ContentFeed(db.Model):
-    url = db.LinkProperty()
-    title = db.TextProperty()
-    content = db.TextProperty()
-    retrieve_date = db.DateTimeProperty()
-
 class MainPage(webapp.RequestHandler):
     def get(self):
         url = "http://sites.google.com/feeds/content/site/charlesmdietrich?path=/home"
@@ -29,26 +22,10 @@ class MainPage(webapp.RequestHandler):
             soup = BeautifulStoneSoup(result.content)
             category = soup.find('category')
             title = category.title.string
-            content = "".join([str(c) for c in category.find('content').contents]).replace('rel="nofollow"', "")
-            try:
-                content_feed = ContentFeed(url = url,
-                                   title = title,
-                                   content = content,
-                                   retrieve_date = retrieve_date)
-                content_feed.put()
-            except Exception, e:
-                logging.error(e)
-                raise e
-        else:
-            try:
-                feeds = ContentFeed.all()
-                feeds.filter("url =", url)
-                feeds.order("-retrieve_date")
-                title = feeds[0].title
-                content = feeds[0].content
-            except Exception, e:
-                logging.error(e)
-                self.error(404)
+            content = "".join([str(c) for c in category.find('content').contents]).replace('rel="nofollow"', "").replace('<br>', "<br/>").replace("</br>", "")
+        else:           
+            logging.error(e)
+            self.error(404)
             
         template_values = {
                 'title': title,

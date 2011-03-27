@@ -1,7 +1,9 @@
 tags_regex = "/(tag|tags|blog/tag|blog/tags)/(.*)"
 tags_dst = 'http://blog.charlesdietrich.com/search/label/'
 
-external_data = {'/about-me/': 'http://pages.charlesdietrich.com/about-me/',
+external_data = {'/feed/': 'http://blog.charlesdietrich.com/feeds/posts/default',
+    '/sitemap/': 'http://pages.charlesdietrich.com/sitemap/',
+    '/about-me/': 'http://pages.charlesdietrich.com/about-me/',
     '/about/': 'http://pages.charlesdietrich.com/about-me/',
     '/actionscript-30-svg-renderer/': 'http://pages.charlesdietrich.com/actionscript-3-svg-renderer/',
     '/bio/': 'http://pages.charlesdietrich.com/bio/',

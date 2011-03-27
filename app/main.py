@@ -5,7 +5,8 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
 
-import gdata.sites.client
+from BeautifulSoup import BeautifulStoneSoup
+
 
 import datetime
 
@@ -21,26 +22,27 @@ class ContentFeed(db.Model):
 
 class MainPage(webapp.RequestHandler):
     def get(self):
-        home_content = "http://sites.google.com/feeds/content/site/charlesmdietrich?path=/home"
-        try:
-            feed = gdata.sites.client.SitesClient().GetContentFeed(uri=home_content)
+        url = "http://sites.google.com/feeds/content/site/charlesmdietrich?path=/home"
+        result = urlfetch.fetch(url)
+        if result.status_code == 200:
             retrieve_date = datetime.datetime.now()
-            title = feed.entry[0].title.text
-            content = str(feed.entry[0].content.html)
+            soup = BeautifulStoneSoup(result.content)
+            category = soup.find('category')
+            title = category.title.string
+            content = "".join([str(c) for c in category.find('content').contents]).replace('rel="nofollow"', "")
             try:
-                content_feed = ContentFeed(url = home_content,
+                content_feed = ContentFeed(url = url,
                                    title = title,
                                    content = content,
                                    retrieve_date = retrieve_date)
                 content_feed.put()
             except Exception, e:
                 logging.error(e)
-        except Exception, e:
-            logging.error(e)
-
+                raise e
+        else:
             try:
                 feeds = ContentFeed.all()
-                feeds.filter("url =", home_content)
+                feeds.filter("url =", url)
                 feeds.order("-retrieve_date")
                 title = feeds[0].title
                 content = feeds[0].content
@@ -58,14 +60,14 @@ class MainPage(webapp.RequestHandler):
 class TagRedirectHandler(webapp.RequestHandler):
     def get(self, root, path):
         dst = "%s%s" % (redirect.tags_dst, path)
-        self.redirect(dst, False) # temporary redirect
+        self.redirect(dst, True) # permanent redirect
 
 class RedirectHandler(webapp.RequestHandler):
     def get(self, path):
         d = redirect.explicit_data
         if path in d.keys():
             dst = d[path]
-            self.redirect(dst, False) # temporary redirect
+            self.redirect(dst, True) # permanent redirect
         else:
             self.error(404)
             

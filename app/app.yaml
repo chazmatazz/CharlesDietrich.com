@@ -1,11 +1,15 @@
-application: charlesdietrich
+application: charles-dietrich
 version: 1
 runtime: python
 api_version: 1
 
 handlers:
+- url: /static(.*)/
+  static_files: static\1/index.html
+  upload: static/index.html
+
 - url: /static
   static_dir: static
-
+  
 - url: /.*
   script: main.py
